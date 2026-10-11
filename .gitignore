@@ -487,3 +487,5 @@ $RECYCLE.BIN/
 .opencode/
 # SQLite database files
 *.db
+*.db-shm
+*.db-wal
