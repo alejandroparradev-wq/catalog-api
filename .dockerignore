@@ -1,0 +1,8 @@
+**/bin
+**/obj
+.git
+**/.deploy/**/*.pfx
+*.db
+*.db-shm
+*.db-wal
+README.md

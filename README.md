@@ -127,6 +127,48 @@ dotnet test
 
 La suite ejecuta los escenarios Gherkin de `tests/CatalogApi.Specs/Features/` (29 escenarios: 14 de categorías y 15 de productos) contra la API real en memoria, con su propia base de datos `catalog-tests.db`.
 
+## Cómo desplegar (Docker)
+
+La imagen multi-etapa (`Dockerfile`) compila la API y la corre con el runtime mínimo de ASP.NET. Requisitos: [Docker](https://www.docker.com/products/docker-desktop/).
+
+```powershell
+# 1) Generar el certificado autofirmado (una sola vez; no se commitea: está en .gitignore)
+dotnet dev-certs https -ep .deploy/https/catalog-api.pfx -p "catalog-api"
+
+# 2) Construir y levantar
+docker compose up -d --build
+```
+
+Consumo:
+
+| URL | Descripción |
+|-----|-------------|
+| `https://localhost:5443` | HTTPS con el certificado autofirmado (el navegador advertirá; aceptar es suficiente para la demo) |
+| `http://localhost:8080` | HTTP plano (puerta para túneles externos) |
+
+Para consumir por HTTPS desde PowerShell sin validar el certificado autofirmado:
+
+```powershell
+Invoke-RestMethod -Method Get -Uri "https://localhost:5443/api/categories" -SkipCertificateCheck
+```
+
+**Base de datos persistente.** `catalog.db` vive en el **volumen Docker** `catalog-data` (montado en `/app/data`); al reiniciar o reconstruir el contenedor (`docker compose down && up -d`) los datos siguen. La app **auto-migra al arranque** (`Migrate()` al iniciar), lo que evita tener que correr `dotnet ef database update` a mano en el contenedor. Si se prefiere el flujo manual: `Database:AutoMigrate=false` en las variables de entorno.
+
+**Exponer la API a internet (opcional, ideal para el video).** Un túnel da una URL pública con HTTPS real sin configurar nada en la nube. Con [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) (gratis, sin cuenta para túneles rápidos):
+
+```powershell
+winget install --id Cloudflare.cloudflared
+cloudflared tunnel --url http://localhost:8080
+```
+
+El comando imprime una URL `https://<nombre>.trycloudflare.com` apuntando a tu API, lista para compartir/consumir desde cualquier dispositivo.
+
+**Decisiones de despliegue (para defender):**
+
+- La app **no redirige** http->https internamente (`UseHttpsRedirection` no está): el TLS se termina en el edge (certificado en el contenedor o túnel). Redirigir dentro del contenedor causa bucles detrás de proxies/reverse proxies.
+- El `docker publish` usa `-r linux-x64` porque **SQLite trae binarios nativos** (`e_sqlite3`) que deben publicarse con el RID del contenedor.
+- `MapOpenApi()` solo se expone en `Development` (decisión de no documentar la API en producción). Para verlo en el despliegue, cambiar `if (app.Environment.IsDevelopment())` o lanzar el contenedor con `ASPNETCORE_ENVIRONMENT=Development`.
+
 ## Especificaciones BDD
 
 Los escenarios de negocio viven en `tests/CatalogApi.Specs/Features/`:
@@ -147,4 +189,4 @@ Este proyecto se desarrolló con asistencia de un agente de IA (Big Pickle, vía
 - El estudiante decidió las reglas de negocio, validó el contrato y defendió cada decisión; la IA implementó el código, explicó el *porqué* de cada pieza y ejecutó las verificaciones.
 - La IA revisó los archivos Gherkin, el esquema de migraciones y el código generado por Reqnroll antes de aceptarlo.
 - Toda la implementación fue validada con `dotnet build` y `dotnet test`; ninguna dependencia se agregó sin verificar su API real (hubo que adaptar diferencias de Reqnroll 3.x, p. ej. `DataTableRow` en lugar de `TableRow`).
-- El resumen ejecutivo para la defensa: 29/29 escenarios BDD verdes, persistencia verificada end-to-end (crear → reiniciar → los datos siguen).
+- El resumen ejecutivo para la defensa: 29/29 escenarios BDD verdes, persistencia verificada end-to-end (crear → reiniciar → los datos siguen) y despliegue Docker con HTTPS y volumen probado.

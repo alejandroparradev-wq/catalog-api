@@ -38,11 +38,20 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-
+// TLS se termina en el edge (certificado en el contenedor o túnel externo);
+// la app NO redirige http->https internamente para evitar bucles detrás de proxies.
 app.UseAuthorization();
 
 app.MapControllers();
+
+// En despliegue la base se auto-crea/actualiza al arrancar (idempotente).
+// Se puede desactivar con Database:AutoMigrate=false para flujos manuales.
+if (builder.Configuration.GetValue("Database:AutoMigrate", true))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
 

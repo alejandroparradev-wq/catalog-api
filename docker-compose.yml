@@ -1,0 +1,22 @@
+# Deploy local con Docker: API en HTTPS (cert autofirmado) + base SQLite persistente.
+# Requisito previo: generar el certificado una vez con:
+#   dotnet dev-certs https -ep .deploy/https/catalog-api.pfx -p "catalog-api"
+services:
+  catalog-api:
+    build: .
+    container_name: catalog-api
+    ports:
+      - "8080:8080" # http (puerta para túneles externos)
+      - "5443:5443" # https (cert autofirmado)
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "http://+:8080;https://+:5443"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /app/certs/catalog-api.pfx
+      ASPNETCORE_Kestrel__Certificates__Default__Password: catalog-api
+      ConnectionStrings__Default: Data Source=/app/data/catalog.db
+    volumes:
+      - catalog-data:/app/data              # la base SQLite sobrevive a reinicios
+      - ./.deploy/https/catalog-api.pfx:/app/certs/catalog-api.pfx:ro
+
+volumes:
+  catalog-data:
