@@ -27,7 +27,7 @@ app.Use(async (context, next) =>
     catch (DomainRuleException ex)
     {
         context.Response.StatusCode = ex.StatusCode;
-        context.Response.ContentType = "application/json";
+        context.Response.ContentType = "application/json; charset=utf-8";
         await context.Response.WriteAsJsonAsync(new { message = ex.Message });
     }
 });
