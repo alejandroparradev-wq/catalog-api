@@ -62,6 +62,12 @@ Característica: Gestión de categorías
     Entonces la edición es rechazada
     Y se informa que el nombre es obligatorio
 
+  Escenario: No se puede editar una categoría que no existe
+    Cuando intento editar la categoría "Fantasma" con los siguientes datos:
+      | Nombre | Fantasma |
+    Entonces la edición es rechazada
+    Y se informa que la categoría no existe
+
   Escenario: Eliminar una categoría sin productos
     Dado que existe una categoría llamada "Bebidas"
     Cuando elimino la categoría "Bebidas"
@@ -78,3 +84,8 @@ Característica: Gestión de categorías
     Dado que existía una categoría llamada "Bebidas" cuyo último producto fue eliminado
     Cuando elimino la categoría "Bebidas"
     Entonces la categoría queda eliminada
+
+  Escenario: No se puede eliminar una categoría que no existe
+    Cuando intento eliminar la categoría "Fantasma"
+    Entonces la eliminación es rechazada
+    Y se informa que la categoría no existe
