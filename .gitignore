@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Reqnroll generated feature code-behind files
+*.feature.cs
