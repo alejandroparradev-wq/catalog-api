@@ -16,8 +16,18 @@ namespace CatalogApi.Data
             modelBuilder.Entity<Category>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .UseCollation("NOCASE");
+                
+                entity.HasIndex(e => e.Name)
+                    .IsUnique();
+                
+                entity.Property(e => e.Description)
+                    .HasMaxLength(500);
+                
                 entity.HasMany(e => e.Products)
                       .WithOne(p => p.Category)
                       .HasForeignKey(p => p.CategoryId)
@@ -26,8 +36,17 @@ namespace CatalogApi.Data
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .UseCollation("NOCASE");
+
+                entity.HasIndex(e => e.Name)
+                    .IsUnique();
+
+                entity.Property(e => e.Description)
+                    .HasMaxLength(500);
             });
         }
     }

@@ -485,3 +485,5 @@ $RECYCLE.BIN/
 *.feature.cs
 # Local AI/tooling folder
 .opencode/
+# SQLite database files
+*.db

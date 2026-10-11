@@ -34,7 +34,15 @@ Estas decisiones complementan el enunciado y deben considerarse parte del contra
   Editar un producto o una categoría reemplaza el conjunto de campos editables (nombre, descripción y, en productos, categoría). Los escenarios de edición envían siempre el conjunto completo de campos para evitar ambigüedad entre actualización total y parcial.
 
 - **Mensaje de eliminación de categoría.**
-  El mensaje de negocio es: *"Esta categoría no se puede eliminar porque tiene productos asignados."* En los escenarios se valida mediante el paso de negocio `se informa que la categoría tiene productos asignados`.
+  El mensaje de negocio es: *"Esta categoria no se puede eliminar porque tiene productos asignados"* (literal del enunciado, sin tilde). En los escenarios se valida mediante el paso de negocio `se informa que la categoría tiene productos asignados`.
+
+## Decisiones técnicas
+
+- **Unicidad case-insensitive con la base de datos como garantía.**
+  El requisito de nombres únicos ignorando mayúsculas/minúsculas (aplica a categorías y, por decisión de negocio, también a productos) se implementa en dos capas:
+  - **Validación en el servicio**: antes de crear o editar se verifica si ya existe el nombre (comparado en minúsculas). Si existe, la API responde con el mensaje de negocio y código 409 (Conflict).
+  - **Índice único case-insensitive en la base de datos** (collation `NOCASE` de SQLite) como garantía de último recurso: la BD rechaza el duplicado aunque la validación en memoria no llegue a ejecutarse.
+  - **Alcance documentado:** "ignorar mayúsculas/minúsculas" se interpreta sobre el rango ASCII (A-Z), que es lo que cubre `NOCASE`. Si más adelante se requiriera ignorar también acentos (p. ej. "Jugós" = "jugos"), la solución sería normalizar el nombre en una columna auxiliar antes del índice; hoy no es necesario porque el enunciado solo pide ignorar mayúsculas/minúsculas.
 
 ## Especificaciones BDD
 
